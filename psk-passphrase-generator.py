@@ -1,63 +1,45 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# -------------------------
-# Written by Ryan Yonzon
-# http://www.ryanyonzon.com/
-# -------------------------
+# -----------------------------------------
+# Written by http://www.ryanyonzon.com/
+# -----------------------------------------
 
-import sys
-import getopt
+import argparse
 import uuid
-import os
+
 from itertools import product
 
-def main(argv):
+def main(args):
 
-    char_length = None
-    prefix = ''
-    output = str(uuid.uuid4())
-    # Default iterables
-    iterables = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    char_length = args.length
+    prefix = args.prefix
+    output = args.output
+    iterables = args.iterables
 
-    # Check parameters
-    try:
-        opts, args = getopt.getopt(argv, "hl:i:p:o:", ["help", "iterable=", "length=", "prefix=", "output="])
-    except getopt.GetoptError:
-        print ('psk-passphrase-generator.py -l <LENGTH> -p <PREFIX> -o <OUTPUT FILE> -i <ITERABLES>')
-        sys.exit(2)
+    if iterables is None:
+        iterables = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' # Default iterables    
 
-    # Get parameter values
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print('psk-passphrase-generator.py -l <LENGTH> -p <PREFIX> -o <OUTPUT FILE> -i <ITERABLES>')
-            sys.exit()
-        elif opt in ("-l", "--length"):
-            char_length = arg
-        elif opt in ("-p", "--prefix"):
-            prefix = arg
-        elif opt in ("-o", "--output"):
-            output = arg
-        elif opt in ("-i", "--iterable"):
-            iterables = arg
+    if prefix is None:
+        prefix = ''
 
-    # Character length is required
-    if char_length is None:
-        print ('psk-passphrase-generator.py -l <LENGTH> -p <PREFIX> -o <OUTPUT FILE> -i <ITERABLES>')
-        sys.exit(2)
-    else:
-        # Prepare and write on file output
-        output_file = open(output, 'wb')
-        keywords = [''.join(i) for i in product(iterables, repeat=int(char_length))]
-        for val in keywords:
-            output_string = prefix + val + "\n"
-            output_file.write(bytes(output_string, 'UTF-8'))
+    if output is None:
+        output = str(uuid.uuid4()) + '.lst'
+
+    output_file = open(output, 'wb') # Prepare output file
+    keywords = [''.join(i) for i in product(iterables, repeat=int(char_length))]
+    for val in keywords:
+        output_string = prefix + val + "\n"
+        output_file.write(bytes(output_string, 'UTF-8'))
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
 
-    try:
-        arg1 = sys.argv[1]
-    except IndexError:
-        print('psk-passphrase-generator.py -l <LENGTH> -p <PREFIX> -o <OUTPUT FILE> -i <ITERABLES>')
-        sys.exit(1)
+    parser.add_argument("-l", "--length", help="Character length (Required)", required=True)
+    parser.add_argument("-p", "--prefix", help="Prefix character or string", required=False)
+    parser.add_argument("-o", "--output", help="Output file name", required=False)
+    parser.add_argument("-i", "--iterables", help="Iterable characters (e.g. ABC123)", required=False)
 
-    main(sys.argv[1:])
+    args = parser.parse_args()
+
+    main(args)
